@@ -4,13 +4,16 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"strconv"
 	"time"
 
+	"DAG_Reliable_Broadcast/internal/broadcast"
+	brachabroadcast "DAG_Reliable_Broadcast/internal/broadcast/bracha_broadcast"
+	dagbroadcast "DAG_Reliable_Broadcast/internal/broadcast/dag_broadcast"
 	"DAG_Reliable_Broadcast/internal/config"
-	"DAG_Reliable_Broadcast/internal/network"
 )
 
-func StartClient(configPath string) {
+func StartClient(configPath, broadcastType string) {
 	log.Println("[INFO] 启动客户端...")
 
 	config, err := config.LoadConfig(configPath)
@@ -30,8 +33,30 @@ func StartClient(configPath string) {
 		}
 	}
 
-	// 处理用户输入并广播消息
-	handleUserInput(node)
+	broadcastTypeInt, err := strconv.Atoi(broadcastType)
+	log.Printf("[DEBUG] 传入的广播类型: %s, 转换后的值: %d", broadcastType, broadcastTypeInt) // 添加调试日志
+	if err != nil {
+		log.Printf("[ERROR] 传入的广播类型有错 %s: %v", broadcastType, err)
+	}
+
+	if broadcastTypeInt == dag_broadcastType {
+		log.Printf("[DEBUG] 进入 DAG 广播逻辑") // 添加调试日志
+		go dagbroadcast.BroadcastToServers(dagbroadcast.Node{
+			NodeType: node.NodeType,
+			Id:       node.Id,
+			Conn:     node.Conn,
+		})
+	} else if broadcastTypeInt == bracha_broadcastType {
+		log.Printf("[DEBUG] 进入 Bracha 广播逻辑") // 添加调试日志
+		go brachabroadcast.BroadcastToServers(brachabroadcast.Node{
+			NodeType: node.NodeType,
+			Id:       node.Id,
+			Conn:     node.Conn,
+		})
+	}
+
+	// 阻塞主协程
+	select {}
 }
 
 func connectWithRetry(node *Node, address string) error {
@@ -41,9 +66,9 @@ func connectWithRetry(node *Node, address string) error {
 	for i := 0; i < maxRetries; i++ {
 		conn, err := net.Dial("tcp", address) // 使用 net 进行连接
 		if err == nil {
-			node.conn[address] = conn
+			node.Conn[address] = conn
 			log.Printf("[INFO] 成功连接到服务器: %s", address)
-			go network.HandleConnection(conn)
+			go broadcast.HandleConnection(conn)
 			return nil
 		}
 
@@ -54,19 +79,4 @@ func connectWithRetry(node *Node, address string) error {
 	}
 
 	return fmt.Errorf("[ERROR] 达到最大重试次数")
-}
-func handleUserInput(node *Node) {
-	ticker := time.NewTicker(1 * time.Second) // 每秒触发一次
-	defer ticker.Stop()                       // 确保在函数结束时停止计时器
-
-	for range ticker.C {
-		message := "定时发送的消息\n" // 这里可以替换为你想要发送的文案
-		log.Print("[INFO] 广播消息: ", message)
-		for addr, conn := range node.conn {
-			if _, err := fmt.Fprint(conn, message); err != nil {
-				log.Printf("[ERROR] 发送消息到 %s 失败: %v", addr, err)
-				continue
-			}
-		}
-	}
 }

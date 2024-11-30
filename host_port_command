@@ -1,4 +1,4 @@
-go run main.go -type 0 -port 8083
-go run main.go -type 1 -port 8080
-go run main.go -type 1 -port 8081
-go run main.go -type 1 -prot 8082
+go run main.go -type 0 -port 8880 -broadcastType 0
+go run main.go -type 1 -port 8881 -broadcastType 0
+go run main.go -type 1 -port 8882 -broadcastType 0
+go run main.go -type 1 -port 8883 -broadcastType 0

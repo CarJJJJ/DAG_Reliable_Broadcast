@@ -4,13 +4,16 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"strconv"
 	"time"
 
+	"DAG_Reliable_Broadcast/internal/broadcast"
+	bracha_broadcast "DAG_Reliable_Broadcast/internal/broadcast/bracha_broadcast"
+	dag_broadcast "DAG_Reliable_Broadcast/internal/broadcast/dag_broadcast"
 	"DAG_Reliable_Broadcast/internal/config"
-	"DAG_Reliable_Broadcast/internal/network"
 )
 
-func StartServer(host, port string) {
+func StartServer(host, port, broadcastType string) {
 	log.Println("[INFO] 启动服务端...")
 
 	config, err := config.LoadConfig("config/host_config.json")
@@ -24,8 +27,25 @@ func StartServer(host, port string) {
 	// 连接到其他服务器
 	connectToOtherServers(node, config)
 
+	broadcastTypeInt, err := strconv.Atoi(broadcastType)
+	if err != nil {
+		log.Printf("[ERROR] 传入的广播类型有错 %s: %v", broadcastType, err)
+	}
+
 	// 启动监听服务
-	startListener(node, host, port)
+	if broadcastTypeInt == dag_broadcastType {
+		dag_broadcast.StartListener(&dag_broadcast.Node{
+			NodeType: node.NodeType,
+			Id:       node.Id,
+			Conn:     node.Conn,
+		}, host, port)
+	} else if broadcastTypeInt == bracha_broadcastType {
+		bracha_broadcast.StartListener(&bracha_broadcast.Node{
+			NodeType: node.NodeType,
+			Id:       node.Id,
+			Conn:     node.Conn,
+		}, host, port)
+	}
 }
 
 func connectToOtherServers(node *Node, config *config.Config) {
@@ -38,8 +58,10 @@ func connectToOtherServers(node *Node, config *config.Config) {
 			for {
 				conn, err := net.Dial("tcp", addr)
 				if err == nil {
-					node.conn[addr] = conn
-					go network.HandleConnection(conn)
+					node.mu.Lock() // 在写入 map 之前加锁
+					node.Conn[addr] = conn
+					node.mu.Unlock() // 写入后解锁
+					go broadcast.HandleConnection(conn)
 					log.Printf("[INFO] 成功连接到服务器: %s", addr)
 					return
 				}
@@ -57,35 +79,5 @@ func connectToOtherServers(node *Node, config *config.Config) {
 				time.Sleep(waitTime)
 			}
 		}(serverAddr)
-	}
-}
-
-func startListener(node *Node, host, port string) {
-	listener, err := net.Listen("tcp", host+":"+port)
-	if err != nil {
-		log.Printf("[ERROR] 服务器启动失败: %v", err)
-		return
-	}
-	defer listener.Close()
-
-	log.Printf("[INFO] 服务器正在监听端口 %s...", port)
-
-	for {
-		conn, err := listener.Accept()
-		if err != nil {
-			log.Printf("[ERROR] 接受连接失败: %v", err)
-			continue
-		}
-
-		remoteAddr := conn.RemoteAddr().String()
-		ip, _, err := net.SplitHostPort(remoteAddr)
-		if err != nil {
-			log.Printf("[ERROR] 获取 IP 地址失败: %v", err)
-			continue
-		}
-		log.Printf("[INFO] 新的连接: %s", ip)
-		node.conn[remoteAddr] = conn
-
-		go network.HandleConnection(conn)
 	}
 }

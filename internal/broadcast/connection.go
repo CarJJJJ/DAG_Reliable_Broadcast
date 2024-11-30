@@ -1,4 +1,4 @@
-package network
+package broadcast
 
 import (
 	"bufio"

@@ -1,7 +1,7 @@
 {
     "servers": [
-        {"id": "1", "host": "localhost", "port": "8080"},
-        {"id": "2", "host": "localhost", "port": "8081"},
-        {"id": "3", "host": "localhost", "port": "8082"}
+        {"id": "1", "host": "localhost", "port": "8881"},
+        {"id": "2", "host": "localhost", "port": "8882"},
+        {"id": "3", "host": "localhost", "port": "8883"}
     ]
 }
