@@ -7,5 +7,7 @@ type ServerConfig struct {
 }
 
 type Config struct {
+	T       int            `json:"T"`
+	N       int            `json:"N"`
 	Servers []ServerConfig `json:"servers"`
 }

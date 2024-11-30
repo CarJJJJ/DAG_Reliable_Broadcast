@@ -1,4 +1,4 @@
-package broadcast
+package dagbroadcast
 
 import (
 	"bufio"
@@ -17,5 +17,6 @@ func HandleConnection(conn net.Conn) {
 			return
 		}
 		log.Printf("[INFO] 收到消息: %s", message)
+
 	}
 }

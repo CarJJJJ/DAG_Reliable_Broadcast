@@ -4,16 +4,14 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"strconv"
 	"time"
 
-	"DAG_Reliable_Broadcast/internal/broadcast"
 	bracha_broadcast "DAG_Reliable_Broadcast/internal/broadcast/bracha_broadcast"
 	dag_broadcast "DAG_Reliable_Broadcast/internal/broadcast/dag_broadcast"
 	"DAG_Reliable_Broadcast/internal/config"
 )
 
-func StartServer(host, port, broadcastType string) {
+func StartServer(host, port string, broadcastType, nodeId int) {
 	log.Println("[INFO] 启动服务端...")
 
 	config, err := config.LoadConfig("config/host_config.json")
@@ -22,24 +20,19 @@ func StartServer(host, port, broadcastType string) {
 		return
 	}
 
-	node := NewNode("server", fmt.Sprintf("%s:%s", host, port))
+	node := NewNode("server", nodeId)
 
 	// 连接到其他服务器
 	connectToOtherServers(node, config)
 
-	broadcastTypeInt, err := strconv.Atoi(broadcastType)
-	if err != nil {
-		log.Printf("[ERROR] 传入的广播类型有错 %s: %v", broadcastType, err)
-	}
-
 	// 启动监听服务
-	if broadcastTypeInt == dag_broadcastType {
+	if broadcastType == dag_broadcastType {
 		dag_broadcast.StartListener(&dag_broadcast.Node{
 			NodeType: node.NodeType,
 			Id:       node.Id,
 			Conn:     node.Conn,
 		}, host, port)
-	} else if broadcastTypeInt == bracha_broadcastType {
+	} else if broadcastType == bracha_broadcastType {
 		bracha_broadcast.StartListener(&bracha_broadcast.Node{
 			NodeType: node.NodeType,
 			Id:       node.Id,
@@ -61,7 +54,6 @@ func connectToOtherServers(node *Node, config *config.Config) {
 					node.mu.Lock() // 在写入 map 之前加锁
 					node.Conn[addr] = conn
 					node.mu.Unlock() // 写入后解锁
-					go broadcast.HandleConnection(conn)
 					log.Printf("[INFO] 成功连接到服务器: %s", addr)
 					return
 				}

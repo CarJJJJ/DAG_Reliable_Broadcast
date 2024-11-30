@@ -6,11 +6,11 @@ import (
 
 type Node struct {
 	NodeType string
-	Id       string
+	Id       int
 	Conn     map[string]net.Conn
 }
 
-func NewNode(nodeType, id string) *Node {
+func NewNode(nodeType string, id int) *Node {
 	return &Node{
 		NodeType: nodeType,
 		Id:       id,

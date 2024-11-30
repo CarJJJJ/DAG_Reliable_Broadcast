@@ -4,16 +4,14 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"strconv"
 	"time"
 
-	"DAG_Reliable_Broadcast/internal/broadcast"
 	brachabroadcast "DAG_Reliable_Broadcast/internal/broadcast/bracha_broadcast"
 	dagbroadcast "DAG_Reliable_Broadcast/internal/broadcast/dag_broadcast"
 	"DAG_Reliable_Broadcast/internal/config"
 )
 
-func StartClient(configPath, broadcastType string) {
+func StartClient(configPath string, broadcastType int, nodeId int) {
 	log.Println("[INFO] 启动客户端...")
 
 	config, err := config.LoadConfig(configPath)
@@ -22,7 +20,7 @@ func StartClient(configPath, broadcastType string) {
 		return
 	}
 
-	node := NewNode("client", fmt.Sprintf("client-%d", 0))
+	node := NewNode("client", nodeId)
 
 	// 连接所有服务器
 	for _, server := range config.Servers {
@@ -33,20 +31,14 @@ func StartClient(configPath, broadcastType string) {
 		}
 	}
 
-	broadcastTypeInt, err := strconv.Atoi(broadcastType)
-	log.Printf("[DEBUG] 传入的广播类型: %s, 转换后的值: %d", broadcastType, broadcastTypeInt) // 添加调试日志
-	if err != nil {
-		log.Printf("[ERROR] 传入的广播类型有错 %s: %v", broadcastType, err)
-	}
-
-	if broadcastTypeInt == dag_broadcastType {
+	if broadcastType == dag_broadcastType {
 		log.Printf("[DEBUG] 进入 DAG 广播逻辑") // 添加调试日志
 		go dagbroadcast.BroadcastToServers(dagbroadcast.Node{
 			NodeType: node.NodeType,
 			Id:       node.Id,
 			Conn:     node.Conn,
 		})
-	} else if broadcastTypeInt == bracha_broadcastType {
+	} else if broadcastType == bracha_broadcastType {
 		log.Printf("[DEBUG] 进入 Bracha 广播逻辑") // 添加调试日志
 		go brachabroadcast.BroadcastToServers(brachabroadcast.Node{
 			NodeType: node.NodeType,
@@ -68,7 +60,6 @@ func connectWithRetry(node *Node, address string) error {
 		if err == nil {
 			node.Conn[address] = conn
 			log.Printf("[INFO] 成功连接到服务器: %s", address)
-			go broadcast.HandleConnection(conn)
 			return nil
 		}
 

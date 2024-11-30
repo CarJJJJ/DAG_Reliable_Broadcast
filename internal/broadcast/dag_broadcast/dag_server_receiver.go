@@ -3,8 +3,6 @@ package dagbroadcast
 import (
 	"log"
 	"net"
-
-	"DAG_Reliable_Broadcast/internal/broadcast"
 )
 
 func StartListener(node *Node, host, port string) {
@@ -33,6 +31,6 @@ func StartListener(node *Node, host, port string) {
 		log.Printf("[INFO] 新的连接: %s", ip)
 		node.Conn[remoteAddr] = conn
 
-		go broadcast.HandleConnection(conn)
+		go HandleConnection(conn)
 	}
 }
