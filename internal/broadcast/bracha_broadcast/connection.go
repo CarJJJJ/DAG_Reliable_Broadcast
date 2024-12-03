@@ -17,7 +17,6 @@ func HandleConnection(conn net.Conn) {
 			log.Printf("[ERROR] 读取消息错误: %v", err)
 			return
 		}
-		log.Printf("[INFO] 收到消息: %s", message)
 
 		// 处理接收到的消息
 		var msgType struct {
@@ -33,7 +32,6 @@ func HandleConnection(conn net.Conn) {
 			var initialMsg InitialMessage
 			if err := json.Unmarshal([]byte(message), &initialMsg); err == nil {
 				instance.InitialPool <- initialMsg
-				log.Printf("[INFO] 存储 InitialMessage: %+v", initialMsg) // 添加日志
 				// 每份消息都开启一个协程去处理
 				go instance.ProcessInitial()
 			}
@@ -41,13 +39,15 @@ func HandleConnection(conn net.Conn) {
 			var echoMsg EchoMessage
 			if err := json.Unmarshal([]byte(message), &echoMsg); err == nil {
 				instance.EchoPool <- echoMsg
-				log.Printf("[INFO] 存储 EchoMessage: %+v", echoMsg) // 添加日志
+				// 每份消息都开启一个协程去处理
+				go instance.ProcessEcho()
 			}
 		case 2: // ReadyMessage
 			var readyMsg ReadyMessage
 			if err := json.Unmarshal([]byte(message), &readyMsg); err == nil {
 				instance.ReadyPool <- readyMsg
-				log.Printf("[INFO] 存储 ReadyMessage: %+v", readyMsg) // 添加日志
+				// 每份消息都开启一个协程去处理
+				go instance.ProcessReady()
 			}
 		default:
 			log.Printf("[ERROR] 未知消息类型: %d", msgType.Type)

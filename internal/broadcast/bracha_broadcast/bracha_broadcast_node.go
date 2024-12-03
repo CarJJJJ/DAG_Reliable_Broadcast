@@ -4,6 +4,8 @@ import (
 	"DAG_Reliable_Broadcast/internal/config"
 	"log"
 	"net"
+
+	cmap "github.com/orcaman/concurrent-map/v2"
 )
 
 const (
@@ -40,9 +42,18 @@ type NodeExtention struct {
 	N int
 
 	// 用于记录发送过的消息类型的map
-	HadEchoInitial  map[string]int // 组成{Gethash(str(initial)): 1}
-	HadReadyInitial map[string]int // 组成{Gethash(str(initial)): 1}
+	HadEchoInitial  cmap.ConcurrentMap[string, int] // 组成{Gethash(str(initial)): 1}
+	HadReadyInitial cmap.ConcurrentMap[string, int] // 组成{Gethash(str(initial)): 1}
 
+	// 用于记录收到的消息类型的量级
+	EchoCount  cmap.ConcurrentMap[string, int] // 组成{Gethash(str(initial)): 3}
+	ReadyCount cmap.ConcurrentMap[string, int] // 组成{Gethash(str(initial)): 4}
+
+	// 用于记录可靠广播的消息的量级
+	ReliableBroadcastCount int
+
+	// 用于统计TPS的量级
+	ReliableBroadcastCountLastSecond int
 }
 
 func NewNodeExtentions(node Node) *NodeExtention {
@@ -55,13 +66,17 @@ func NewNodeExtentions(node Node) *NodeExtention {
 	N := config.N
 	log.Printf("[INFO] 加载配置成功: T=%d, N=%d", T, N) // 添加日志记录 T 和 N 的值
 	return &NodeExtention{
-		Node:            node,
-		InitialPool:     make(chan InitialMessage, 100000), // 设置缓冲区大小
-		EchoPool:        make(chan EchoMessage, 100000),    // 设置缓冲区大小
-		ReadyPool:       make(chan ReadyMessage, 100000),   // 设置缓冲区大小
-		T:               T,
-		N:               N,
-		HadEchoInitial:  make(map[string]int),
-		HadReadyInitial: make(map[string]int),
+		Node:                             node,
+		InitialPool:                      make(chan InitialMessage, 100000), // 设置缓冲区大小
+		EchoPool:                         make(chan EchoMessage, 100000),    // 设置缓冲区大小
+		ReadyPool:                        make(chan ReadyMessage, 100000),   // 设置缓冲区大小
+		T:                                T,
+		N:                                N,
+		HadEchoInitial:                   cmap.New[int](),
+		HadReadyInitial:                  cmap.New[int](),
+		EchoCount:                        cmap.New[int](),
+		ReadyCount:                       cmap.New[int](),
+		ReliableBroadcastCount:           0,
+		ReliableBroadcastCountLastSecond: 0,
 	}
 }

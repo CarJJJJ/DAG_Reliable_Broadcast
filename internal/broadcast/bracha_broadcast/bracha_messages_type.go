@@ -1,5 +1,11 @@
 package brachabroadcast
 
+const (
+	initial_type = 0
+	echo_type    = 1
+	ready_type   = 2
+)
+
 type InitialMessage struct {
 	Type    int    `json:"type"`
 	Message string `json:"message"`
@@ -13,7 +19,7 @@ type EchoMessage struct {
 }
 
 type ReadyMessage struct {
-	Type           int         `json:"type"`
-	InitialMessage EchoMessage `json:"echo_message"`
-	NodeID         int         `json:"node_id"`
+	Type           int            `json:"type"`
+	InitialMessage InitialMessage `json:"initial_message"`
+	NodeID         int            `json:"node_id"`
 }
