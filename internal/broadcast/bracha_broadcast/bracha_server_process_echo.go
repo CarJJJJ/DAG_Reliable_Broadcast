@@ -1,8 +1,8 @@
 package brachabroadcast
 
 import (
-	"DAG_Reliable_Broadcast/internal/broadcast/util"
 	"log"
+	"regexp"
 )
 
 func (instance *NodeExtention) ProcessEcho() {
@@ -10,26 +10,27 @@ func (instance *NodeExtention) ProcessEcho() {
 	case msg := <-instance.EchoPool:
 		// log.Printf("[INFO] 收到Echo消息: %+v", msg) // 记录收到的Echo消息
 
-		// 计算哈希值
-		hash, err := util.CalculateHash(msg.InitialMessage)
-		if err != nil {
-			log.Printf("[ERROR] 计算哈希值失败: %v", err) // 记录错误
-			return
-		}
+		// 假设你有一个接收到的消息
+		receivedMessage := msg.InitialMessage.Message
+
+		// 使用正则表达式提取count的值
+		re := regexp.MustCompile(`uniqueIndex:(\d+)`)
+		matches := re.FindStringSubmatch(receivedMessage)
+		uniqueIndex := matches[1]
 
 		// 统计对该initial的echo量级
-		if _, exists := instance.EchoCount.Get(hash); !exists {
-			instance.EchoCount.Set(hash, 1)
+		if _, exists := instance.EchoCount.Get(uniqueIndex); !exists {
+			instance.EchoCount.Set(uniqueIndex, 1)
 		} else {
-			echoCount, _ := instance.EchoCount.Get(hash)
-			instance.EchoCount.Set(hash, echoCount+1)
+			echoCount, _ := instance.EchoCount.Get(uniqueIndex)
+			instance.EchoCount.Set(uniqueIndex, echoCount+1)
 		}
 
 		// 如果对该initial的echo量级达到(n+t)/2
-		echoCount, _ := instance.EchoCount.Get(hash)
+		echoCount, _ := instance.EchoCount.Get(uniqueIndex)
 		if echoCount >= (instance.N+instance.T)/2 {
 			// 如果没echo的就echo
-			if _, exists := instance.HadEchoInitial.Get(hash); !exists {
+			if _, exists := instance.HadEchoInitial.Get(uniqueIndex); !exists {
 				// 封装echo
 				echo := EchoMessage{
 					Type:           echo_type,
@@ -37,14 +38,14 @@ func (instance *NodeExtention) ProcessEcho() {
 					NodeID:         instance.Node.Id,
 				}
 				// 标记已echo
-				instance.HadEchoInitial.Set(hash, 1)
+				instance.HadEchoInitial.Set(uniqueIndex, 1)
 
 				// 广播echo
 				instance.BroadcastEchoToServers(echo)
 			}
 
 			// 如果没ready的就ready
-			if _, exists := instance.HadReadyInitial.Get(hash); !exists {
+			if _, exists := instance.HadReadyInitial.Get(uniqueIndex); !exists {
 				// 封装ready
 				ready := ReadyMessage{
 					Type:           ready_type,
@@ -52,7 +53,7 @@ func (instance *NodeExtention) ProcessEcho() {
 					NodeID:         instance.Node.Id,
 				}
 				// 标记已ready
-				instance.HadReadyInitial.Set(hash, 1)
+				instance.HadReadyInitial.Set(uniqueIndex, 1)
 
 				// 广播ready
 				instance.BroadcastReadyToServers(ready)
@@ -60,6 +61,6 @@ func (instance *NodeExtention) ProcessEcho() {
 		}
 
 	default:
-		log.Println("[INFO] 当前没有Echo消息可处理") // 如果没有消息，记录日志
+		log.Println("[INFO] 当前没有Echo消息可处理")
 	}
 }

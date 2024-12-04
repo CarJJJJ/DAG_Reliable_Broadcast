@@ -2,8 +2,9 @@
     "T": 1,
     "N": 4,
     "servers": [
-        {"id": "1", "host": "localhost", "port": "8081"},
-        {"id": "2", "host": "localhost", "port": "8082"},
-        {"id": "3", "host": "localhost", "port": "8083"}
+        {"id": "1", "host": "21.6.191.223.devcloud.woa.com", "port": "8080"},
+        {"id": "2", "host": "21.6.197.56.devcloud.woa.com", "port": "8080"},
+        {"id": "3", "host": "21.6.197.111.devcloud.woa.com", "port": "8080"},
+        {"id": "4", "host": "21.6.197.122.devcloud.woa.com", "port": "8080"}
     ]
 }

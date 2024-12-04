@@ -1,8 +1,8 @@
 package brachabroadcast
 
 import (
-	"DAG_Reliable_Broadcast/internal/broadcast/util"
 	"log"
+	"regexp"
 )
 
 func (instance *NodeExtention) ProcessInitial() {
@@ -10,21 +10,18 @@ func (instance *NodeExtention) ProcessInitial() {
 	case msg := <-instance.InitialPool:
 		// log.Printf("[INFO] 收到初始消息: %+v", msg) // 记录收到的初始消息
 
-		// 计算哈希值
-		hash, err := util.CalculateHash(msg)
-		if err != nil {
-			log.Printf("[ERROR] 计算哈希值失败: %v", err) // 记录错误
-			return
-		}
+		// 假设你有一个接收到的消息
+		receivedMessage := msg.Message
 
-		// 检查哈希值是否已经存在于 HadEchoInitial 中
-		if _, exists := instance.HadEchoInitial.Get(hash); exists {
-			// log.Printf("[INFO] 消息:%v,已处理,不再处理", msg) // 如果哈希值存在，记录日志
-			return
-		}
+		// 使用正则表达式提取count的值
+		re := regexp.MustCompile(`uniqueIndex:(\d+)`)
+		matches := re.FindStringSubmatch(receivedMessage)
+		uniqueIndex := matches[1]
 
-		// 如果哈希值不存在，放入 map 中并处理消息
-		instance.HadEchoInitial.Set(hash, 1)
+		log.Printf("[INFO] uniqueIndex:%s", uniqueIndex)
+
+		// 如果唯一键不存在，放入 map 中并处理消息
+		instance.HadEchoInitial.Set(uniqueIndex, 1)
 
 		// 封装Echo
 		echo := EchoMessage{
