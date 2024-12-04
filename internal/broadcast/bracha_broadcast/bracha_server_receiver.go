@@ -3,10 +3,7 @@ package brachabroadcast
 import (
 	"log"
 	"net"
-	"sync"
 )
-
-var mu sync.Mutex // 添加局部互斥锁
 
 func StartListener(node *Node, host, port string) {
 	listener, err := net.Listen("tcp", host+":"+port)
@@ -36,10 +33,6 @@ func StartListener(node *Node, host, port string) {
 			continue
 		}
 		log.Printf("[INFO] 新的连接: %s:%s", ip, port)
-
-		mu.Lock() // 加锁
-		node.Conn[remoteAddr] = conn
-		mu.Unlock() // 解锁
 
 		// 消息存通道，开启通道处理器
 		go HandleConnection(conn)
