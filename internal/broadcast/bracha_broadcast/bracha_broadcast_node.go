@@ -51,6 +51,8 @@ type NodeExtention struct {
 
 	// 用于记录可靠广播的消息的量级
 	ReliableBroadcastCount int
+	// 用于记录可靠广播的消息的唯一标识
+	ReliableBroadcastUniqueIndex cmap.ConcurrentMap[string, int]
 
 	// 用于统计TPS的量级
 	ReliableBroadcastCountLastSecond int
@@ -67,9 +69,9 @@ func NewNodeExtentions(node Node) *NodeExtention {
 	log.Printf("[INFO] 加载配置成功: T=%d, N=%d", T, N) // 添加日志记录 T 和 N 的值
 	return &NodeExtention{
 		Node:                             node,
-		InitialPool:                      make(chan InitialMessage, 100000), // 设置缓冲区大小
-		EchoPool:                         make(chan EchoMessage, 100000),    // 设置缓冲区大小
-		ReadyPool:                        make(chan ReadyMessage, 100000),   // 设置缓冲区大小
+		InitialPool:                      make(chan InitialMessage, 999999), // 设置缓冲区大小
+		EchoPool:                         make(chan EchoMessage, 999999),    // 设置缓冲区大小
+		ReadyPool:                        make(chan ReadyMessage, 999999),   // 设置缓冲区大小
 		T:                                T,
 		N:                                N,
 		HadEchoInitial:                   cmap.New[int](),
@@ -78,5 +80,6 @@ func NewNodeExtentions(node Node) *NodeExtention {
 		ReadyCount:                       cmap.New[int](),
 		ReliableBroadcastCount:           0,
 		ReliableBroadcastCountLastSecond: 0,
+		ReliableBroadcastUniqueIndex:     cmap.New[int](),
 	}
 }

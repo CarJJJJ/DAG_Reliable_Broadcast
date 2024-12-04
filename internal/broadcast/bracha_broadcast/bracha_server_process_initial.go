@@ -18,7 +18,7 @@ func (instance *NodeExtention) ProcessInitial() {
 		matches := re.FindStringSubmatch(receivedMessage)
 		uniqueIndex := matches[1]
 
-		log.Printf("[INFO] uniqueIndex:%s", uniqueIndex)
+		// log.Printf("[INFO] uniqueIndex:%s", uniqueIndex)
 
 		// 如果唯一键不存在，放入 map 中并处理消息
 		instance.HadEchoInitial.Set(uniqueIndex, 1)

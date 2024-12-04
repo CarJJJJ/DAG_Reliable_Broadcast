@@ -62,10 +62,14 @@ func (instance *NodeExtention) ProcessReady() {
 			}
 		}
 
-		// 当对该initial的ready量级到达2t+1
+		// 当对该initial的ready量级到达2t+1，且没有接收该消息时
 		if readyCount >= 2*instance.T+1 {
-			// log.Printf("消息已被可靠广播, 消息:%v", msg.InitialMessage)
-			instance.ReliableBroadcastCount++
+			if _, exists := instance.ReliableBroadcastUniqueIndex.Get(uniqueIndex); !exists {
+				// log.Printf("消息已被可靠广播, 消息:%v", msg.InitialMessage)
+				instance.ReliableBroadcastUniqueIndex.Set(uniqueIndex, 1)
+				instance.ReliableBroadcastCount++
+			}
+
 		}
 
 	default:
