@@ -6,8 +6,9 @@ While we are using SigBRB, we need to install pbc library.
 ## MACOS install
 
 First we install go and pbc library.
+
 ```bash
-brew install go
+brew install gmp
 ```
 
 install_pbc.sh is a script to install pbc library.
