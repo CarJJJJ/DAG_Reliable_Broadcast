@@ -8,7 +8,12 @@ import (
 
 	bracha_broadcast "DAG_Reliable_Broadcast/internal/broadcast/bracha_broadcast"
 	dag_broadcast "DAG_Reliable_Broadcast/internal/broadcast/dag_broadcast"
+	signbroadcast "DAG_Reliable_Broadcast/internal/broadcast/sign_broadcast"
 	"DAG_Reliable_Broadcast/internal/config"
+)
+
+const (
+	sign_send_node_id = 3
 )
 
 func StartServer(host, port string, broadcastType, nodeId int) {
@@ -27,18 +32,33 @@ func StartServer(host, port string, broadcastType, nodeId int) {
 
 	// 启动监听服务
 	if broadcastType == dag_broadcastType {
-		dag_broadcast.StartListener(&dag_broadcast.Node{
+		go dag_broadcast.StartListener(&dag_broadcast.Node{
 			NodeType: node.NodeType,
 			Id:       node.Id,
 			Conn:     node.Conn,
 		}, host, port)
 	} else if broadcastType == bracha_broadcastType {
-		bracha_broadcast.StartListener(&bracha_broadcast.Node{
+		go bracha_broadcast.StartListener(&bracha_broadcast.Node{
 			NodeType: node.NodeType,
 			Id:       node.Id,
 			Conn:     node.Conn,
 		}, host, port)
+	} else if broadcastType == sign_broadcastType {
+		go signbroadcast.StartListener(&signbroadcast.Node{
+			NodeType: node.NodeType,
+			Id:       node.Id,
+			Conn:     node.Conn,
+		}, host, port)
+
+		if node.Id == sign_send_node_id {
+			go signbroadcast.BroadcastToServers(signbroadcast.Node{
+				NodeType: node.NodeType,
+				Id:       node.Id,
+				Conn:     node.Conn,
+			})
+		}
 	}
+	select {}
 }
 
 func connectToOtherServers(node *Node, config *config.Config) {

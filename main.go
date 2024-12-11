@@ -23,13 +23,19 @@ func main() {
 
 	switch *nodeType {
 	case "0":
-		networknode.StartClient(*configPath, *broadcastType, *id)
+		go networknode.StartClient(*configPath, *broadcastType, *id)
+		if *broadcastType == 2 {
+			go networknode.StartServer(*host, *port, *broadcastType, *id)
+		}
 	case "1":
-		networknode.StartServer(*host, *port, *broadcastType, *id)
+		go networknode.StartServer(*host, *port, *broadcastType, *id)
 	default:
 		log.Println("[INFO] 使用方法: -type {0|1} [-config config.json] [-host host] [-port port]")
 		log.Println("[INFO] 0 - 客户端")
 		log.Println("[INFO] 1 - 服务端")
 		os.Exit(1)
 	}
+
+	// 阻塞主协程
+	select {}
 }

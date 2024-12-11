@@ -8,6 +8,7 @@ import (
 
 	brachabroadcast "DAG_Reliable_Broadcast/internal/broadcast/bracha_broadcast"
 	dagbroadcast "DAG_Reliable_Broadcast/internal/broadcast/dag_broadcast"
+	signbroadcast "DAG_Reliable_Broadcast/internal/broadcast/sign_broadcast"
 	"DAG_Reliable_Broadcast/internal/config"
 )
 
@@ -41,6 +42,13 @@ func StartClient(configPath string, broadcastType int, nodeId int) {
 	} else if broadcastType == bracha_broadcastType {
 		log.Printf("[DEBUG] 进入 Bracha 广播逻辑") // 添加调试日志
 		go brachabroadcast.BroadcastToServers(brachabroadcast.Node{
+			NodeType: node.NodeType,
+			Id:       node.Id,
+			Conn:     node.Conn,
+		})
+	} else if broadcastType == sign_broadcastType {
+		log.Printf("[DEBUG] 进入 Sign 广播逻辑") // 添加调试日志
+		go signbroadcast.BroadcastToServers(signbroadcast.Node{
 			NodeType: node.NodeType,
 			Id:       node.Id,
 			Conn:     node.Conn,
