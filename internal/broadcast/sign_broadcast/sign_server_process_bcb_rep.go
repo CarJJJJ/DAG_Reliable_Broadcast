@@ -3,6 +3,7 @@ package signbroadcast
 import (
 	"crypto/sha256"
 	"log"
+	"strconv"
 
 	"github.com/CarJJJJ/go-bls"
 )
@@ -25,7 +26,11 @@ func (node *NodeExtention) ProcessBCBRep() {
 		// log.Printf("[INFO] 签名份额验证成功,份额来自:%v,uniqueIndex:%v", msg.NodeID, uniqueIndex)
 
 		// 将sigmaFrom加入到node.Pset中
-		node.Pset[msg.NodeID] = sigmaFrom
+		uniqueIndexInt, err := strconv.Atoi(uniqueIndex)
+		if _, ok := node.Pset[uniqueIndexInt]; !ok {
+			node.Pset[uniqueIndexInt] = make(map[int]bls.Signature)
+		}
+		node.Pset[uniqueIndexInt][msg.NodeID] = sigmaFrom
 
 		if len(node.Pset) >= node.N-node.T {
 			// 如果Pset的长度等于N-T，则需要恢复门限签名
@@ -41,11 +46,11 @@ func (node *NodeExtention) ProcessBCBRep() {
 
 			memberIds := []int{}
 			shares := []bls.Signature{}
-			for key := range node.Pset {
+			for key := range node.Pset[uniqueIndexInt] {
 				// 根据Pset的Key先拼出MemberIds
 				memberIds = append(memberIds, key)
 				// 根据Pset的Value拼出shares
-				shares = append(shares, node.Pset[key])
+				shares = append(shares, node.Pset[uniqueIndexInt][key])
 			}
 			// 恢复门限签名
 			signature, err := bls.Threshold(shares, memberIds, node.System)

@@ -106,18 +106,21 @@ type NodeExtention struct {
 	MemberSecrets []bls.PrivateKey
 
 	// 用于记录发送过的消息类型的map
-	HadRepUniqueIndex         cmap.ConcurrentMap[string, int] // 组成{Gethash(str(initial)): 1}
-	HadFinalUniqueIndex       cmap.ConcurrentMap[string, int] // 组成{Gethash(str(initial)): 1}
-	HadDisperseUniqueIndex    cmap.ConcurrentMap[string, int] // 组成{Gethash(str(initial)): 1}
-	HadReconstructUniqueIndex cmap.ConcurrentMap[string, int] // 组成{Gethash(str(initial)): 1}
-	HadReadyUniqueIndex       cmap.ConcurrentMap[string, int] // 组成{Gethash(str(initial)): 1}
+	HadRepUniqueIndex         cmap.ConcurrentMap[string, int] // 组成{UniqueIndex: 1}
+	HadFinalUniqueIndex       cmap.ConcurrentMap[string, int] // 组成{UniqueIndex: 1}
+	HadDisperseUniqueIndex    cmap.ConcurrentMap[string, int] // 组成{UniqueIndex: 1}
+	HadReconstructUniqueIndex cmap.ConcurrentMap[string, int] // 组成{UniqueIndex: 1}
+	HadReadyUniqueIndex       cmap.ConcurrentMap[string, int] // 组成{UniqueIndex: 1}
+
+	// 用于记录分片消息的map
+	HadRecvDisperseMessageForUniqueIndex cmap.ConcurrentMap[string, int] // 组成:{UniqueIndex: 1}
 
 	// 签名需要用到的系统参数
 	Pairing bls.Pairing
 	System  bls.System
 
 	// 签名参数
-	Pset  map[int]bls.Signature
+	Pset  map[int]map[int]bls.Signature
 	Proof []bls.Signature
 
 	// 拜占庭阈值
@@ -216,7 +219,7 @@ func NewNodeExtentions(node Node) *NodeExtention {
 		HadReadyUniqueIndex:       cmap.New[int](),
 		Pairing:                   pairing,
 		System:                    system,
-		Pset:                      make(map[int]bls.Signature),
+		Pset:                      make(map[int]map[int]bls.Signature),
 		Proof:                     make([]bls.Signature, 100),
 	}
 }
