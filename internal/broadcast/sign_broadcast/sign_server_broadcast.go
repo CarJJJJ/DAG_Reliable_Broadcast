@@ -29,6 +29,26 @@ func (instance *NodeExtention) SendBCBRepToServer(bcbRepMessage BCBRepMessage, n
 	conn.Write(message)
 }
 
+func (instance *NodeExtention) SendDisperseMessage(disperseMessage DisperseMessage, nodeID int) {
+	message, err := json.Marshal(disperseMessage) // 序列化为JSON
+	if err != nil {
+		log.Printf("[ERROR] 序列化消息失败: %v", err)
+	}
+
+	message = append(message, '\n')
+
+	serverAddr := instance.Config.Servers[nodeID]
+	Host := serverAddr.Host
+	Port := serverAddr.Port
+	serverAddrStr := fmt.Sprintf("%s:%s", Host, Port)
+	conn, ok := instance.Node.Conn[serverAddrStr]
+	if !ok {
+		log.Printf("[ERROR] 连接到 %s 失败", serverAddrStr)
+		return
+	}
+	conn.Write(message)
+}
+
 // BroadcastBCBRepToServers 实例广播BCBSend
 func (instance *NodeExtention) BroadcastBCBRepToServers(bcbRepMessage BCBRepMessage) {
 	message, err := json.Marshal(bcbRepMessage) // 序列化为JSON
