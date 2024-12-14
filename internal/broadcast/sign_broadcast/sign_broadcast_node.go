@@ -116,6 +116,10 @@ type NodeExtention struct {
 	Pairing bls.Pairing
 	System  bls.System
 
+	// 签名参数
+	Pset  map[int]bls.Signature
+	Proof []bls.Signature
+
 	// 拜占庭阈值
 	T int
 	N int
@@ -212,5 +216,7 @@ func NewNodeExtentions(node Node) *NodeExtention {
 		HadReadyUniqueIndex:       cmap.New[int](),
 		Pairing:                   pairing,
 		System:                    system,
+		Pset:                      make(map[int]bls.Signature),
+		Proof:                     make([]bls.Signature, 100),
 	}
 }

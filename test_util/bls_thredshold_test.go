@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	"math/rand"
 
@@ -73,6 +74,8 @@ func TestBlsThreshold(test *testing.T) {
 		test.Fatal(err)
 	}
 
+	startTime := time.Now()
+
 	// Select group members.
 	memberIds := []int{0, 1, 2}
 
@@ -108,6 +111,9 @@ func TestBlsThreshold(test *testing.T) {
 	}
 
 	test.Logf("本次的签名:%v", fmt.Sprintf("%x", system.SigToBytes(signature)))
+	// 计算总耗时
+	duration := time.Since(startTime)
+	test.Logf("门限签名（除去生成参数）总耗时:%v", duration)
 
 	// Clean up.
 	signature.Free()

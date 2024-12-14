@@ -14,8 +14,6 @@ func (node *NodeExtention) ProcessBCBSend() {
 		receivedMessage := msg.Message
 
 		log.Printf("[INFO] 收到BCBSend消息: uniqueIndex: %s, from:%v", uniqueIndex, msg.NodeID)
-		// 如果唯一键不存在，放入 map 中并处理消息
-		node.HadRepUniqueIndex.Set(uniqueIndex, 1)
 
 		// 把msg.Message放到BCBSendMessage之后，发送给所有节点
 		hash := sha256.Sum256(receivedMessage)
@@ -23,6 +21,9 @@ func (node *NodeExtention) ProcessBCBSend() {
 		defer sigmaFrom.Free()
 
 		sigmaFromToBytes := node.System.SigToBytes(sigmaFrom)
+
+		// 标记发送过Rep
+		node.HadRepUniqueIndex.Set(uniqueIndex, 1)
 		BCBSendMessage := BCBRepMessage{
 			Type:        BCBRepType,
 			Message:     msg.Message,
@@ -30,7 +31,6 @@ func (node *NodeExtention) ProcessBCBSend() {
 			NodeID:      node.Node.Id,
 			UniqueIndex: uniqueIndex,
 		}
-
 		// 发送回去给Msg.NodeID
 		node.SendBCBRepToServer(BCBSendMessage, msg.NodeID)
 	}

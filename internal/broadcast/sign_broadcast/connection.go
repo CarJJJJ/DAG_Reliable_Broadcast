@@ -40,7 +40,7 @@ func HandleConnection(conn net.Conn) {
 			if err := json.Unmarshal([]byte(message), &bcbRspMsg); err == nil {
 				Instance.BCBRepPool <- bcbRspMsg
 				// 每份消息都开启一个协程去处理
-				go Instance.ProcessBCBRsp()
+				go Instance.ProcessBCBRep()
 			}
 		case 2: // BCBFinalMessage
 			var bcbFinalMsg BCBFinalMessage
