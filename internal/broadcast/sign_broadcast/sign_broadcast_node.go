@@ -113,7 +113,7 @@ type NodeExtention struct {
 	HadReadyUniqueIndex       cmap.ConcurrentMap[string, int] // 组成{UniqueIndex: 1}
 
 	// 用于记录分片消息的map
-	HadRecvDisperseMessageForUniqueIndex cmap.ConcurrentMap[string, int] // 组成:{UniqueIndex: 1}
+	RecvDisperseMessageForUniqueIndexNumber cmap.ConcurrentMap[string, int] // 组成:{UniqueIndex: 1}
 
 	// 签名需要用到的系统参数
 	Pairing bls.Pairing
@@ -199,27 +199,28 @@ func NewNodeExtentions(node Node) *NodeExtention {
 	}
 
 	return &NodeExtention{
-		Node:                      node,
-		Config:                    *config,
-		BCBSendPool:               make(chan BCBSendMessage, 999999),     // 设置缓冲区大小
-		BCBRepPool:                make(chan BCBRepMessage, 999999),      // 设置缓冲区大小
-		BCBFinalPool:              make(chan BCBFinalMessage, 999999),    // 设置缓冲区大小
-		BCBDispersePool:           make(chan DisperseMessage, 999999),    // 设置缓冲区大小
-		BCBReconstructPool:        make(chan ReconstructMessage, 999999), // 设置缓冲区大小
-		T:                         T,
-		N:                         N,
-		GroupKey:                  groupKey,
-		MemberKeys:                memberKeys,
-		GroupSecret:               groupSecret,
-		MemberSecrets:             memberSecrets,
-		HadRepUniqueIndex:         cmap.New[int](),
-		HadFinalUniqueIndex:       cmap.New[int](),
-		HadDisperseUniqueIndex:    cmap.New[int](),
-		HadReconstructUniqueIndex: cmap.New[int](),
-		HadReadyUniqueIndex:       cmap.New[int](),
-		Pairing:                   pairing,
-		System:                    system,
-		Pset:                      make(map[int]map[int]bls.Signature),
-		Proof:                     make([]bls.Signature, 100),
+		Node:                                    node,
+		Config:                                  *config,
+		BCBSendPool:                             make(chan BCBSendMessage, 999999),     // 设置缓冲区大小
+		BCBRepPool:                              make(chan BCBRepMessage, 999999),      // 设置缓冲区大小
+		BCBFinalPool:                            make(chan BCBFinalMessage, 999999),    // 设置缓冲区大小
+		BCBDispersePool:                         make(chan DisperseMessage, 999999),    // 设置缓冲区大小
+		BCBReconstructPool:                      make(chan ReconstructMessage, 999999), // 设置缓冲区大小
+		T:                                       T,
+		N:                                       N,
+		GroupKey:                                groupKey,
+		MemberKeys:                              memberKeys,
+		GroupSecret:                             groupSecret,
+		MemberSecrets:                           memberSecrets,
+		HadRepUniqueIndex:                       cmap.New[int](),
+		HadFinalUniqueIndex:                     cmap.New[int](),
+		HadDisperseUniqueIndex:                  cmap.New[int](),
+		HadReconstructUniqueIndex:               cmap.New[int](),
+		HadReadyUniqueIndex:                     cmap.New[int](),
+		Pairing:                                 pairing,
+		System:                                  system,
+		Pset:                                    make(map[int]map[int]bls.Signature),
+		Proof:                                   make([]bls.Signature, 100),
+		RecvDisperseMessageForUniqueIndexNumber: cmap.New[int](),
 	}
 }

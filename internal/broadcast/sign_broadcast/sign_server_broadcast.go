@@ -81,3 +81,19 @@ func (instance *NodeExtention) BroadcastBCBFinalMessage(bcbFinalMessage BCBFinal
 		}
 	}
 }
+
+// BroadcastBCBReconstructMessage 广播BCBReconstructMessage给所有节点
+func (instance *NodeExtention) BroadcastBCBReconstructMessage(bcbReconstructMessage ReconstructMessage) {
+	message, err := json.Marshal(bcbReconstructMessage) // 序列化为JSON
+	if err != nil {
+		log.Printf("[ERROR] 序列化消息失败: %v", err)
+	}
+
+	message = append(message, '\n')
+	for addr, conn := range instance.Node.Conn {
+		if _, err := fmt.Fprint(conn, string(message)); err != nil {
+			log.Printf("[ERROR] 发送消息到 %s 失败: %v", addr, err)
+			continue
+		}
+	}
+}
