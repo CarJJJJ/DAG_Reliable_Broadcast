@@ -6,10 +6,12 @@ import (
 	"log"
 	"net"
 	"os"
+	"sync"
 
 	"math/rand"
 
 	"github.com/CarJJJJ/go-bls"
+	"github.com/klauspost/reedsolomon"
 	cmap "github.com/orcaman/concurrent-map/v2"
 )
 
@@ -64,10 +66,10 @@ type ReconstructMessage struct {
 }
 
 type ReadyMessage struct {
-	NodeID      int    `json:"node_id"`
-	Type        int    `json:"type"`
-	Message     []byte `json:"message"`
-	UniqueIndex string `json:"unique_index"`
+	NodeID      int      `json:"node_id"`
+	Type        int      `json:"type"`
+	Message     [][]byte `json:"message"`
+	UniqueIndex string   `json:"unique_index"`
 }
 
 var Instance *NodeExtention
@@ -98,6 +100,7 @@ type NodeExtention struct {
 	BCBFinalPool       chan BCBFinalMessage
 	BCBDispersePool    chan DisperseMessage
 	BCBReconstructPool chan ReconstructMessage
+	BCBReadyPool       chan ReadyMessage
 
 	// 公私密钥
 	GroupKey      bls.PublicKey
@@ -111,21 +114,39 @@ type NodeExtention struct {
 	HadDisperseUniqueIndex    cmap.ConcurrentMap[string, int] // 组成{UniqueIndex: 1}
 	HadReconstructUniqueIndex cmap.ConcurrentMap[string, int] // 组成{UniqueIndex: 1}
 	HadReadyUniqueIndex       cmap.ConcurrentMap[string, int] // 组成{UniqueIndex: 1}
-
-	// 用于记录分片消息的map
-	RecvDisperseMessageForUniqueIndexNumber cmap.ConcurrentMap[string, int] // 组成:{UniqueIndex: 1}
-
+	// 用于接收可靠广播的map
+	HadReliableBroadcastUniqueIndex cmap.ConcurrentMap[string, int]
+	// 用于记录收到分片消息的map
+	RecvDisperseMessageForUniqueIndexNumber    cmap.ConcurrentMap[string, int] // 组成:{UniqueIndex: 1}
+	RecvReconstructMessageForUniqueIndexNumber cmap.ConcurrentMap[string, int] // 组成:{UniqueIndex: 1}
+	RecvReadyMessageForUniqueIndexNumber       map[string]map[int]int          // 组成:{UniqueIndex: {NodeID: 1}}
+	RecvReadyMessageForUniqueIndexNumberMu     sync.RWMutex
+	// RecvReadyMessageForUniqueIndexNumberSync cmap.ConcurrentMap[string, cmap.ConcurrentMap[string, int]]
 	// 签名需要用到的系统参数
 	Pairing bls.Pairing
 	System  bls.System
 
 	// 签名参数
-	Pset  map[int]map[int]bls.Signature
+	Pset   map[int]map[int]bls.Signature
+	PsetMu sync.RWMutex
+	// PsetSync cmap.ConcurrentMap[string, cmap.ConcurrentMap[string, bls.Signature]]
 	Proof []bls.Signature
 
+	// 纠删码
+	ReedSolomonEncoder reedsolomon.Encoder
+
+	// 用于恢复uniqueIndex数据的map
+
+	ReconstructDataForUniqueIndex   map[string][][]byte
+	ReconstructDataForUniqueIndexMu sync.RWMutex
+	// ReconstructDataForUniqueIndexSync cmap.ConcurrentMap[string, [][]byte]
 	// 拜占庭阈值
 	T int
 	N int
+
+	// 记录可靠广播的数量
+	ReliableBroadcastCount           int
+	ReliableBroadcastCountLastSecond int
 }
 
 func NewNodeExtentions(node Node) *NodeExtention {
@@ -198,29 +219,42 @@ func NewNodeExtentions(node Node) *NodeExtention {
 		log.Printf("[ERROR] 生成密钥失败: %v", err)
 	}
 
+	encoder, err := reedsolomon.New(N-T, T)
+	if err != nil {
+		log.Printf("[ERROR] 纠删码编码器创建失败: %v", err)
+	}
+
 	return &NodeExtention{
-		Node:                                    node,
-		Config:                                  *config,
-		BCBSendPool:                             make(chan BCBSendMessage, 999999),     // 设置缓冲区大小
-		BCBRepPool:                              make(chan BCBRepMessage, 999999),      // 设置缓冲区大小
-		BCBFinalPool:                            make(chan BCBFinalMessage, 999999),    // 设置缓冲区大小
-		BCBDispersePool:                         make(chan DisperseMessage, 999999),    // 设置缓冲区大小
-		BCBReconstructPool:                      make(chan ReconstructMessage, 999999), // 设置缓冲区大小
-		T:                                       T,
-		N:                                       N,
-		GroupKey:                                groupKey,
-		MemberKeys:                              memberKeys,
-		GroupSecret:                             groupSecret,
-		MemberSecrets:                           memberSecrets,
-		HadRepUniqueIndex:                       cmap.New[int](),
-		HadFinalUniqueIndex:                     cmap.New[int](),
-		HadDisperseUniqueIndex:                  cmap.New[int](),
-		HadReconstructUniqueIndex:               cmap.New[int](),
-		HadReadyUniqueIndex:                     cmap.New[int](),
+		Node:                            node,
+		Config:                          *config,
+		BCBSendPool:                     make(chan BCBSendMessage, 999999),     // 设置缓冲区大小
+		BCBRepPool:                      make(chan BCBRepMessage, 999999),      // 设置缓冲区大小
+		BCBFinalPool:                    make(chan BCBFinalMessage, 999999),    // 设置缓冲区大小
+		BCBDispersePool:                 make(chan DisperseMessage, 999999),    // 设置缓冲区大小
+		BCBReconstructPool:              make(chan ReconstructMessage, 999999), // 设置缓冲区大小
+		BCBReadyPool:                    make(chan ReadyMessage, 999999),       // 设置缓冲区大小
+		T:                               T,
+		N:                               N,
+		GroupKey:                        groupKey,
+		MemberKeys:                      memberKeys,
+		GroupSecret:                     groupSecret,
+		MemberSecrets:                   memberSecrets,
+		HadRepUniqueIndex:               cmap.New[int](),
+		HadFinalUniqueIndex:             cmap.New[int](),
+		HadDisperseUniqueIndex:          cmap.New[int](),
+		HadReconstructUniqueIndex:       cmap.New[int](),
+		HadReadyUniqueIndex:             cmap.New[int](),
+		HadReliableBroadcastUniqueIndex: cmap.New[int](),
+
 		Pairing:                                 pairing,
 		System:                                  system,
 		Pset:                                    make(map[int]map[int]bls.Signature),
 		Proof:                                   make([]bls.Signature, 100),
 		RecvDisperseMessageForUniqueIndexNumber: cmap.New[int](),
+		RecvReconstructMessageForUniqueIndexNumber: cmap.New[int](),
+		RecvReadyMessageForUniqueIndexNumber:       make(map[string]map[int]int),
+		// RecvReadyMessageForUniqueIndexNumberSync: cmap.New[cmap.ConcurrentMap[string, int]](),
+		ReedSolomonEncoder:            encoder,
+		ReconstructDataForUniqueIndex: make(map[string][][]byte),
 	}
 }

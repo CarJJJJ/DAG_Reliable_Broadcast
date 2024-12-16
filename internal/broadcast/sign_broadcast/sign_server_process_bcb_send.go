@@ -2,7 +2,6 @@ package signbroadcast
 
 import (
 	"crypto/sha256"
-	"log"
 
 	"github.com/CarJJJJ/go-bls"
 )
@@ -13,7 +12,7 @@ func (node *NodeExtention) ProcessBCBSend() {
 		uniqueIndex := msg.UniqueIndex
 		receivedMessage := msg.Message
 
-		log.Printf("[INFO] 收到BCBSend消息: uniqueIndex: %s, from:%v", uniqueIndex, msg.NodeID)
+		// log.Printf("[INFO] 收到BCBSend消息: uniqueIndex: %s, from:%v", uniqueIndex, msg.NodeID)
 
 		// 把msg.Message放到BCBSendMessage之后，发送给所有节点
 		hash := sha256.Sum256(receivedMessage)

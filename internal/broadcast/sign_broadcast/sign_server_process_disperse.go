@@ -1,11 +1,9 @@
 package signbroadcast
 
-import "log"
-
 func (node *NodeExtention) ProcessDisperse() {
 	select {
 	case msg := <-node.BCBDispersePool:
-		log.Printf("[INFO] 收到分片消息, unique_index: %s, from: %d", msg.UniqueIndex, msg.NodeID)
+		// log.Printf("[INFO] 收到分片消息, unique_index: %s, from: %d", msg.UniqueIndex, msg.NodeID)
 
 		if _, ok := node.RecvDisperseMessageForUniqueIndexNumber.Get(msg.UniqueIndex); !ok {
 			node.RecvDisperseMessageForUniqueIndexNumber.Set(msg.UniqueIndex, 1)
@@ -28,5 +26,6 @@ func (node *NodeExtention) ProcessDisperse() {
 				node.BroadcastBCBReconstructMessage(reconstructMessage)
 			}
 		}
+
 	}
 }

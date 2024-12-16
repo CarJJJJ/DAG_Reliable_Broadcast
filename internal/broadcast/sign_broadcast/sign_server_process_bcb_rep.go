@@ -12,7 +12,7 @@ func (node *NodeExtention) ProcessBCBRep() {
 	select {
 	case msg := <-node.BCBRepPool:
 		uniqueIndex := msg.UniqueIndex
-		log.Printf("[INFO] 收到BCBRep消息, 唯一键: %s, from:%v", uniqueIndex, msg.NodeID)
+		// log.Printf("[INFO] 收到BCBRep消息, 唯一键: %s, from:%v", uniqueIndex, msg.NodeID)
 		// shareVerify
 		sigmaFrom, err := node.System.SigFromBytes(msg.SigmaFrom)
 		if err != nil {
@@ -26,13 +26,16 @@ func (node *NodeExtention) ProcessBCBRep() {
 		// log.Printf("[INFO] 签名份额验证成功,份额来自:%v,uniqueIndex:%v", msg.NodeID, uniqueIndex)
 
 		// 将sigmaFrom加入到node.Pset中
+
+		node.PsetMu.Lock()
 		uniqueIndexInt, err := strconv.Atoi(uniqueIndex)
 		if _, ok := node.Pset[uniqueIndexInt]; !ok {
 			node.Pset[uniqueIndexInt] = make(map[int]bls.Signature)
 		}
 		node.Pset[uniqueIndexInt][msg.NodeID] = sigmaFrom
+		node.PsetMu.Unlock()
 
-		if len(node.Pset) >= node.N-node.T {
+		if len(node.Pset[uniqueIndexInt]) >= node.N-node.T {
 			// 如果Pset的长度等于N-T，则需要恢复门限签名
 			// 如果唯一键已经存在，则跳过
 			if _, ok := node.HadFinalUniqueIndex.Get(uniqueIndex); ok {
@@ -48,6 +51,7 @@ func (node *NodeExtention) ProcessBCBRep() {
 			shares := []bls.Signature{}
 			for key := range node.Pset[uniqueIndexInt] {
 				// 根据Pset的Key先拼出MemberIds
+
 				memberIds = append(memberIds, key)
 				// 根据Pset的Value拼出shares
 				shares = append(shares, node.Pset[uniqueIndexInt][key])

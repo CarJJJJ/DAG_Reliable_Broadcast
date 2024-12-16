@@ -5,13 +5,12 @@ import (
 	"log"
 
 	"github.com/CarJJJJ/go-bls"
-	"github.com/klauspost/reedsolomon"
 )
 
 func (node *NodeExtention) ProcessBCBFinal() {
 	select {
 	case msg := <-node.BCBFinalPool:
-		log.Printf("[INFO] 收到BCBFinal消息, 唯一键: %s, from:%v", msg.UniqueIndex, msg.NodeID)
+		// log.Printf("[INFO] 收到BCBFinal消息, 唯一键: %s, from:%v", msg.UniqueIndex, msg.NodeID)
 
 		// 验证签名
 		sigmaCombine, err := node.System.SigFromBytes(msg.SigmaCombine)
@@ -26,7 +25,7 @@ func (node *NodeExtention) ProcessBCBFinal() {
 		}
 
 		// 验证成功，打印消息
-		log.Printf("[INFO] 门限签名验证成功,消息:%v,uniqueIndex:%v", msg.Message, msg.UniqueIndex)
+		// log.Printf("[INFO] 门限签名验证成功,消息:%v,uniqueIndex:%v", msg.Message, msg.UniqueIndex)
 		// 把签名加入到已验证的签名池
 		node.Proof = append(node.Proof, sigmaCombine)
 		// 构建Disperse消息
@@ -47,14 +46,16 @@ func (node *NodeExtention) ProcessBCBFinal() {
 			data[i/shardSize][i%shardSize] = msg.Message[i]
 		}
 
-		encoder, err := reedsolomon.New(node.N-node.T, node.T)
-		if err != nil {
-			log.Printf("[ERROR] 纠删码编码器创建失败: %v", err)
-			return
-		}
-		err = encoder.Encode(data)
+		// log.Printf("[INFO] 分片前的数据: %v,纠删码分片数据: %v, uniqueIndex: %v", msg.Message, data, msg.UniqueIndex)
+
+		err = node.ReedSolomonEncoder.Encode(data)
 		if err != nil {
 			log.Printf("[ERROR] 纠删码分片失败: %v", err)
+			return
+		}
+
+		if _, ok := node.HadDisperseUniqueIndex.Get(msg.UniqueIndex); ok {
+			// log.Printf("[INFO] 已经发送过分片消息, unique_index: %s", msg.UniqueIndex)
 			return
 		}
 
@@ -68,5 +69,6 @@ func (node *NodeExtention) ProcessBCBFinal() {
 			}
 			node.SendDisperseMessage(disperseMessage, i)
 		}
+		node.HadDisperseUniqueIndex.Set(msg.UniqueIndex, 1)
 	}
 }

@@ -5,19 +5,17 @@ import (
 	"fmt"
 	"log"
 	"time"
-
-	"golang.org/x/exp/rand"
 )
 
 func BroadcastToServers(node Node) {
 	ticker := time.NewTicker(1 * time.Second) // 每秒触发一次
 	defer ticker.Stop()                       // 确保在函数结束时停止计时器
 	// 定义n的大小
-	const n = 4 // 例如，n = 4
+	const n = 1024 // 例如，n = 4
 	// 生成n*n字节的随机消息内容
 	messageContent := make([]byte, n*n) // 创建n*n B的字节切片
 	for i := range messageContent {
-		messageContent[i] = byte('A' + rand.Intn(26)) // 随机生成字符'A'到'Z'
+		messageContent[i] = byte('A' + i%26)
 	}
 
 	// 确保messageContent的长度是n*n
@@ -30,10 +28,10 @@ func BroadcastToServers(node Node) {
 
 	count := 0
 	for range ticker.C {
-		if count == 10 {
+		if count == 1000 {
 			continue
 		}
-		for i := 0; i < 10; i++ { // 每秒发送10条消息
+		for i := 0; i < 100; i++ { // 每秒发送5条消息
 			bcbSendMessage := BCBSendMessage{
 				Type:        0,                        // 设置消息类型
 				Message:     messageContent,           // 消息
@@ -55,7 +53,7 @@ func BroadcastToServers(node Node) {
 					continue
 				}
 			}
-			log.Print("[INFO] 广播消息, uniqueIndex: ", count)
+			// log.Print("[INFO] 广播消息, uniqueIndex: ", count)
 
 		}
 	}

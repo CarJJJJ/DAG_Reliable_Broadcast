@@ -64,6 +64,13 @@ func HandleConnection(conn net.Conn) {
 				go Instance.ProcessReconstruct()
 			}
 
+		case 5: // ReadyMessage
+			var readyMsg ReadyMessage
+			if err := json.Unmarshal([]byte(message), &readyMsg); err == nil {
+				Instance.BCBReadyPool <- readyMsg
+				// 每份消息都开启一个协程去处理
+				go Instance.ProcessReadyMessage()
+			}
 		default:
 			log.Printf("[ERROR] 未知消息类型: %d", msgType.Type)
 		}
