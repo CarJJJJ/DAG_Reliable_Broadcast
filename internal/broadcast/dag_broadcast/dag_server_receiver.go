@@ -15,6 +15,10 @@ func StartListener(node *Node, host, port string) {
 
 	log.Printf("[INFO] 服务器正在监听端口 %s...", port)
 
+	// 新建实例
+	Instance = NewNodeExtentions(*node)
+	go Instance.CountTPS()
+
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
@@ -23,14 +27,14 @@ func StartListener(node *Node, host, port string) {
 		}
 
 		remoteAddr := conn.RemoteAddr().String()
-		ip, _, err := net.SplitHostPort(remoteAddr)
+		ip, port, err := net.SplitHostPort(remoteAddr)
 		if err != nil {
 			log.Printf("[ERROR] 获取 IP 地址失败: %v", err)
 			continue
 		}
-		log.Printf("[INFO] 新的连接: %s", ip)
-		node.Conn[remoteAddr] = conn
+		log.Printf("[INFO] 新的连接: %s:%s", ip, port)
 
+		// 消息存通道，开启通道处理器
 		go HandleConnection(conn)
 	}
 }
