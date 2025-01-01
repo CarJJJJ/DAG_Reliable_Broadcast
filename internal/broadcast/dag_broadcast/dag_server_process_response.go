@@ -35,7 +35,8 @@ func (node *NodeExtention) ProcessResponse() {
 		// 添加节点
 		node.V.Add(responseMessagehash)
 
-		writeResponseToJSON(node.Node.Id, responseMessagehash, msg)
+		// 绘图 默认不开启
+		// writeResponseToJSON(node.Node.Id, responseMessagehash, msg)
 
 		// 添加边
 		for _, echoReference := range msg.EchoReferences {
