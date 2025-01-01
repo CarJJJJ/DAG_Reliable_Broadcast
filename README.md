@@ -40,7 +40,7 @@ fi
 and then
 
 ```bash
-go get github.com/enzoh/go-bls
+go get github.com/CarJJJJ/go-bls
 go get github.com/klauspost/reedsolomon
 ```
 
@@ -74,6 +74,6 @@ fi
 and then
 
 ```bash
-go get github.com/enzoh/go-bls
+go get github.com/CarJJJJ/go-bls
 go get github.com/klauspost/reedsolomon
 ```
