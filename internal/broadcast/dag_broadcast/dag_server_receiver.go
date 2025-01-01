@@ -18,6 +18,7 @@ func StartListener(node *Node, host, port string) {
 	// 新建实例
 	Instance = NewNodeExtentions(*node)
 	go Instance.CountTPS()
+	go Instance.StartInBufferListener()
 
 	for {
 		conn, err := listener.Accept()

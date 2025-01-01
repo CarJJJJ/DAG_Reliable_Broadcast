@@ -12,7 +12,7 @@ func BroadcastToServers(node Node) {
 	ticker := time.NewTicker(1 * time.Second) // 每秒触发一次
 	defer ticker.Stop()                       // 确保在函数结束时停止计时器
 	// 定义n的大小
-	const n = 4 // 例如，n = 4
+	const n = 1024 // 例如，n = 1024
 	// 生成n*n字节的随机消息内容
 	messageContent := make([]byte, n*n) // 创建n*n B的字节切片
 	for i := range messageContent {
@@ -27,12 +27,12 @@ func BroadcastToServers(node Node) {
 	}
 	time.Sleep(10 * time.Second) // 等待10s连接建立完再发消息
 
-	count := 0
+	count := 1
 	for range ticker.C {
-		if count == 1000 {
-			continue
+		if count >= 200 {
+			break
 		}
-		for i := 0; i < 100; i++ { // 每秒发送5条消息
+		for i := 0; i < 10; i++ { // 每秒发送5条消息
 			sendMessage := SendMessage{
 				Type:        0,                        // 设置消息类型
 				Message:     string(messageContent),   // 消息

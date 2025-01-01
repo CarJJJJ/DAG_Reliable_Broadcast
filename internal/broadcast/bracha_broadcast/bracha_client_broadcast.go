@@ -14,14 +14,18 @@ func BroadcastToServers(node Node) {
 	defer ticker.Stop()                       // 确保在函数结束时停止计时器
 
 	// 生成1M的随机消息内容
-	messageContent := make([]byte, 1024*1024) // 创建1M的字节切片
+	const n = 1024                      // 例如，n = 1024
+	messageContent := make([]byte, n*n) // 创建n*n B的字节切片
 	for i := range messageContent {
 		messageContent[i] = byte('A' + rand.Intn(26)) // 随机生成字符'A'到'Z'
 	}
 
 	count := 0
 	for range ticker.C {
-		for i := 0; i < 100; i++ { // 每秒发送100条消息
+		if count >= 200 {
+			break
+		}
+		for i := 0; i < 10; i++ { // 每秒发送100条消息
 
 			currentTime := time.Now().Format("2006-01-02 15:04:05")
 			initialMessage := InitialMessage{
