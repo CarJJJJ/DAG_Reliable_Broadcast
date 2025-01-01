@@ -8,6 +8,7 @@ import (
 
 	brachabroadcast "DAG_Reliable_Broadcast/internal/broadcast/bracha_broadcast"
 	dagbroadcast "DAG_Reliable_Broadcast/internal/broadcast/dag_broadcast"
+	dag_ct_broadcast "DAG_Reliable_Broadcast/internal/broadcast/dag_ct_broadcast"
 	signbroadcast "DAG_Reliable_Broadcast/internal/broadcast/sign_broadcast"
 	"DAG_Reliable_Broadcast/internal/config"
 )
@@ -53,8 +54,14 @@ func StartClient(configPath string, broadcastType int, nodeId int) {
 			Id:       node.Id,
 			Conn:     node.Conn,
 		})
+	} else if broadcastType == dag_ct_broadcastType {
+		log.Printf("[DEBUG] 进入 DAG_CT 广播逻辑") // 添加调试日志
+		go dag_ct_broadcast.BroadcastToServers(dag_ct_broadcast.Node{
+			NodeType: node.NodeType,
+			Id:       node.Id,
+			Conn:     node.Conn,
+		})
 	}
-
 	// 阻塞主协程
 	select {}
 }

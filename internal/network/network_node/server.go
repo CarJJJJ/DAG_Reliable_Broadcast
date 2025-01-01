@@ -8,6 +8,7 @@ import (
 
 	bracha_broadcast "DAG_Reliable_Broadcast/internal/broadcast/bracha_broadcast"
 	dag_broadcast "DAG_Reliable_Broadcast/internal/broadcast/dag_broadcast"
+	dag_ct_broadcast "DAG_Reliable_Broadcast/internal/broadcast/dag_ct_broadcast"
 	signbroadcast "DAG_Reliable_Broadcast/internal/broadcast/sign_broadcast"
 	"DAG_Reliable_Broadcast/internal/config"
 )
@@ -57,6 +58,12 @@ func StartServer(host, port string, broadcastType, nodeId int) {
 				Conn:     node.Conn,
 			})
 		}
+	} else if broadcastType == dag_ct_broadcastType {
+		go dag_ct_broadcast.StartListener(&dag_ct_broadcast.Node{
+			NodeType: node.NodeType,
+			Id:       node.Id,
+			Conn:     node.Conn,
+		}, host, port)
 	}
 	select {}
 }
