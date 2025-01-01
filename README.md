@@ -77,3 +77,23 @@ and then
 go get github.com/CarJJJJ/go-bls
 go get github.com/klauspost/reedsolomon
 ```
+
+# How to read the DAG_Graph in Json
+
+you can see the code in dag_broadcast/dag_server_process_response.go
+
+```go
+writeResponseToJSON(node.Node.Id, responseMessagehash, msg)
+```
+
+and you can see the DAG_Graph json file in DAG_Reliable_Broadcast/DAG_Graph
+
+and then run the bash
+
+```bash
+go test -v dag_test.go
+```
+
+```bash
+dot -Tpng DAG_Graph.dot -o DAG_Graph.png
+```
