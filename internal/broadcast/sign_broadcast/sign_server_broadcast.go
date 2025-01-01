@@ -46,7 +46,12 @@ func (instance *NodeExtention) SendDisperseMessage(disperseMessage DisperseMessa
 		log.Printf("[ERROR] 连接到 %s 失败", serverAddrStr)
 		return
 	}
-	conn.Write(message)
+
+	_, err = conn.Write(message)
+
+	if err != nil {
+		log.Printf("[ERROR] 发送消息到 %s 失败: %v", serverAddrStr, err)
+	}
 }
 
 // BroadcastBCBRepToServers 实例广播BCBSend
