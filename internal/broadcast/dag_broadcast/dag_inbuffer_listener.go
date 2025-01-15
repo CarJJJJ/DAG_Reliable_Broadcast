@@ -1,7 +1,6 @@
 package dagbroadcast
 
 import (
-	"log"
 	"time"
 )
 
@@ -42,7 +41,7 @@ func (node *NodeExtention) StartInBufferListener() {
 					NodeID:          node.Node.Id,
 					UniqueIndex:     uniqueIndex,
 				}
-				log.Printf("[INFO] Inbuffer发送消息: R%v_%v", responseMessage.UniqueIndex, responseMessage.NodeID)
+				// log.Printf("[INFO] Inbuffer发送消息: R%v_%v", responseMessage.UniqueIndex, responseMessage.NodeID)
 				node.BroadcastResposneToServers(&responseMessage)
 				node.InBuffer.Delete(key)
 				return true

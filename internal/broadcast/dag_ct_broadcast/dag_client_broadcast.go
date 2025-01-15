@@ -28,7 +28,7 @@ func BroadcastToServers(node Node) {
 	ticker := time.NewTicker(1 * time.Second) // 每秒触发一次
 	defer ticker.Stop()                       // 确保在函数结束时停止计时器
 	// 定义n的大小
-	const n = 1024 // 例如，n = 1024
+	const n = 16 // 例如，n = 1024
 	// 生成n*n字节的随机消息内容
 	messageContent := make([]byte, n*n) // 创建n*n B的字节切片
 	for i := range messageContent {
@@ -45,10 +45,10 @@ func BroadcastToServers(node Node) {
 
 	count := 1
 	for range ticker.C {
-		if count >= 10 {
+		if count >= 200 {
 			break
 		}
-		for i := 0; i < 2; i++ { // 每秒发送5条消息
+		for i := 0; i < 10; i++ { // 每秒发送10条消息
 			// 纠删码对消息进行分片
 
 			// 计算每个分片的大小

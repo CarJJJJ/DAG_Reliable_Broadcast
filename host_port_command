@@ -1,5 +1,5 @@
-go run main.go -type 0 -port 8080 -broadcastType 1 -id 0
-go run main.go -type 1 -port 8080 -broadcastType 1 -id 1
-go run main.go -type 1 -port 8080 -broadcastType 1 -id 2
-go run main.go -type 1 -port 8080 -broadcastType 1 -id 3
-go run main.go -type 1 -port 8080 -broadcastType 1 -id 4
+go run main.go -type 1 -port 8080 -broadcastType 0 -id 0
+go run main.go -type 1 -port 8080 -broadcastType 0 -id 1
+go run main.go -type 1 -port 8080 -broadcastType 0 -id 2
+go run main.go -type 1 -port 8080 -broadcastType 0 -id 3
+go run main.go -type 0 -port 8084 -broadcastType 0 -id 4
