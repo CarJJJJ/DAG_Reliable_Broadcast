@@ -78,6 +78,16 @@ go get github.com/CarJJJJ/go-bls
 go get github.com/klauspost/reedsolomon
 ```
 
+
+if your device can not find libpbc.so.1
+```bash
+# creat config
+echo "usr/local/lib" | sudo tee /etc/ld.so.conf.d/usr-local-lib.conf
+
+# update config
+sudo ldconfig
+```
+
 # How to read the DAG_Graph in Json
 
 you can see the code in dag_broadcast/dag_server_process_response.go
