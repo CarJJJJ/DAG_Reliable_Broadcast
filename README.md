@@ -82,7 +82,7 @@ go get github.com/klauspost/reedsolomon
 if your device can not find libpbc.so.1
 ```bash
 # creat config
-echo "usr/local/lib" | sudo tee /etc/ld.so.conf.d/usr-local-lib.conf
+echo "/usr/local/lib" | sudo tee /etc/ld.so.conf.d/usr-local-lib.conf
 
 # update config
 sudo ldconfig
