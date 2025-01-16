@@ -201,6 +201,7 @@ func NewNodeExtentions(node Node) *NodeExtention {
 		Y:                                      5,
 		// SyncMap不需要显示初始化
 		InBuffer: &sync.Map{}, //?
+		Vote:     sync.Map{},
 	}
 }
 
